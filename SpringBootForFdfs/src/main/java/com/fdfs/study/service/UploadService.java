@@ -15,9 +15,14 @@ import java.security.NoSuchAlgorithmException;
 @PropertySource("classpath:fastdfs-client.properties")
 public class UploadService {
 
+    /**
+     * 密钥
+     */
    @Value("${http_secret_key}")
    private String secretKey;
-
+    /**
+     * 服务器地址
+     */
    @Value("${fdfs.remote-url}")
    private String remoteUrl;
 
@@ -41,7 +46,7 @@ public class UploadService {
             //返回结果，第一个为组名，第二个为fdfs磁盘地址
             String[] result = storageClient.upload_file(file.getBytes(), extName, null);
 //            String srcUrl = new StringBuffer(result[0]).append("/").append(result[1]).toString();
-            return tokenUrl(result[1]);
+            return tokenUrl(result[0],result[1]);
         } catch (IOException | MyException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
@@ -50,15 +55,18 @@ public class UploadService {
 
     /**
      * 防盗链地址
-     * @param srcUrl
+     * @param group
+     * @param remoteFile
      * @return
      */
-    public String tokenUrl(String srcUrl) throws UnsupportedEncodingException, NoSuchAlgorithmException, MyException {
+    public String tokenUrl(String group,String remoteFile) throws UnsupportedEncodingException, NoSuchAlgorithmException, MyException {
         int ts = (int) (System.currentTimeMillis()/1000);
-        String token = ProtoCommon.getToken(srcUrl, ts, secretKey);
+        String token = ProtoCommon.getToken(remoteFile, ts, secretKey);
         StringBuffer url = new StringBuffer(remoteUrl);
         url.append("/")
-            .append(srcUrl)
+            .append(group)
+            .append("/")
+            .append(remoteFile)
             .append("?")
             .append("token=")
             .append(token)
